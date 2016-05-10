@@ -4,7 +4,7 @@ namespace yiicod\laravel5queue\connectors;
 
 use Illuminate\Contracts\Queue\Queue;
 use Illuminate\Queue\Connectors\ConnectorInterface;
-use yiicod\laravel5queue\MongoQueue;
+use yiicod\laravel5queue\queues\MongoQueue;
 
 /**
  * Connector for laravel queue to mongodb

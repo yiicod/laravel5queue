@@ -7,7 +7,7 @@ use Illuminate\Queue\Failed\FailedJobProviderInterface;
 
 /**
  * Mongo provider for failed jobs
- * 
+ *
  * @author Virchenko Maksim <muslim1992@gmail.com>
  */
 class MongoFailedJobProvider implements FailedJobProviderInterface
@@ -53,7 +53,7 @@ class MongoFailedJobProvider implements FailedJobProviderInterface
     {
         $failed_at = Carbon::now();
 
-        $this->getTable()->insert(compact('connection', 'queue', 'payload', 'failed_at'));
+        $this->getTable()->insertOne(compact('connection', 'queue', 'payload', 'failed_at'));
     }
 
     /**
@@ -80,7 +80,7 @@ class MongoFailedJobProvider implements FailedJobProviderInterface
      */
     public function find($id)
     {
-        return $this->getTable()->find(['_id' => new MongoId($id)]);
+        return $this->getTable()->findOne(['_id' => new \MongoDB\BSON\ObjectID($id)]);
     }
 
     /**
@@ -91,7 +91,7 @@ class MongoFailedJobProvider implements FailedJobProviderInterface
      */
     public function forget($id)
     {
-        return $this->getTable()->remove(['_id' => new MongoId($id)]);
+        return $this->getTable()->deleteOne(['_id' => new \MongoDB\BSON\ObjectID($id)]);
     }
 
     /**
@@ -101,7 +101,7 @@ class MongoFailedJobProvider implements FailedJobProviderInterface
      */
     public function flush()
     {
-        $this->getTable()->remove();
+        $this->getTable()->deleteMany();
     }
 
     /**

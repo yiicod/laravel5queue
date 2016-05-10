@@ -5,7 +5,7 @@ namespace yiicod\laravel5queue\jobs;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Queue\Job as JobContract;
 use Illuminate\Queue\Jobs\Job;
-use yiicod\laravel5queue\MongoQueue;
+use yiicod\laravel5queue\queues\MongoQueue;
 
 /**
  * MongoJob for laravel queue

@@ -3,20 +3,19 @@
 namespace yiicod\laravel5queue\commands;
 
 use CConsoleCommand;
-use CLogger;
-use Exception;
 use Yii;
+use yiicod\laravel5queue\base\WorkerInterface;
 use yiicod\laravel5queue\failed\MongoFailedJobProvider;
+use yiicod\laravel5queue\handlers\DaemonExceptionHandler;
 use yiicod\laravel5queue\Worker;
 
 /**
  * Command to start worker
- * 
+ *
  * @author Virchenko Maksim <muslim1992@gmail.com>
  */
-class WorkerCommand extends CConsoleCommand
+class WorkerCommand extends CConsoleCommand implements WorkerInterface
 {
-
     /**
      * Delay before getting jobs
      *
@@ -46,26 +45,30 @@ class WorkerCommand extends CConsoleCommand
     public $maxTries = 1;
 
     /**
+     * Queue name
+     * @var string
+     */
+    protected $queue = 'default';
+
+    /**
+     * Connection name
+     * @var string
+     */
+    protected $connection = 'default';
+
+    /**
      * @var string Daemon display name
      */
-    private $daemonName = 'laravel5queue-daemon';
-
-    /**
-     * @var string PID file name
-     */
-    private $pidFile = 'laravel5queue.pid';
-
-    /**
-     * @var Worker daemon
-     */
-    private $worker = null;
+    protected $daemonName = 'laravel5queue-daemon';
 
     /**
      * Default action. Starts daemon.
      */
-    public function actionStart()
+    public function actionStart($connection, $queue/*, $force = 0*/)
     {
-        $this->createDaemon();
+        $this->queue = $queue;
+        $this->connection = $connection;
+        $this->createDaemon(/*$force*/);
     }
 
     /**
@@ -73,58 +76,55 @@ class WorkerCommand extends CConsoleCommand
      *
      * Close server and close all connections.
      */
-    public function actionStop()
+    public function actionStop($connection, $queue)
     {
+        $this->queue = $queue;
+        $this->connection = $connection;
         if (false === $this->isAlreadyRunning()) {
-            echo sprintf("\n[%s] is not running.\n", $this->daemonName);
-            exit();
+            echo sprintf("[%s] is not running.\n", $this->daemonName);
+            Yii::app()->end();
         }
-
-        try {
-            if ($this->worker) {
-                $this->worker->stop();
-            }
-        } catch (Exception $e) {
-            Yii::log($this->daemonName . ' error: ' . $e->getMessage(), CLogger::LEVEL_ERROR);
-        }
-
-        if (file_exists($this->getLockFilePath())) {
-            $pid = trim(file_get_contents($this->getLockFilePath()));
-            unlink($this->getLockFilePath());
-
-            shell_exec("kill $pid");
-        }
-        echo sprintf("\n[%s] stoped.\n", $this->daemonName);
+        $this->stopDaemon();
     }
 
     /**
      * Creates daemon.
      * Check is daemon already run and if false then starts daemon and update lock file.
      */
-    private function createDaemon()
+    protected function createDaemon(/*$force = false*/)
     {
-        if ($this->isAlreadyRunning()) {
-            echo sprintf("\n[%s] is running already.\n", $this->daemonName);
-            exit();
+        if (true === $this->isAlreadyRunning(/*(bool)$force*/)) {
+            echo sprintf("[%s] is running already.\n", $this->daemonName);
+            Yii::app()->end();
         }
 
         $pid = pcntl_fork();
         if ($pid == -1) {
             exit('Error while forking process.');
         } elseif ($pid) {
-            // this is parent
-            //pcntl_wait($status); //Protect against Zombie children
-            //echo "Exiting parent process " . getmypid() . "\n";
-            exit;
+            exit();
         } else {
-            // this is children
+            $pid = getmypid();
+            $this->addPid($pid);
         }
 
-        $pid = getmypid();
-        echo sprintf("\n[%s] running with PID: %s\n", $this->daemonName, $pid);
-        file_put_contents($this->getLockFilePath(), $pid);
+        $this->worker();
 
-        $this->runWorker();
+        echo sprintf("[%s] running with PID: %s\n", $this->daemonName, $pid);
+    }
+
+
+    protected function stopDaemon()
+    {
+        if (file_exists($this->getPidsFilePath())) {
+            $runingPids = explode(',', trim(file_get_contents($this->getPidsFilePath())));
+            foreach ($runingPids as $pid) {
+                shell_exec("kill $pid");
+            }
+        }
+        @unlink($this->getPidsFilePath());
+
+        echo sprintf("[%s] stoped.\n", $this->daemonName);
     }
 
     /**
@@ -132,21 +132,48 @@ class WorkerCommand extends CConsoleCommand
      *
      * @return bool
      */
-    public function isAlreadyRunning()
+    protected function isAlreadyRunning(/*$force = false*/)
     {
-        if (false === file_exists($this->getLockFilePath())) {
+        if (false === file_exists($this->getPidsFilePath())) {
             return false;
         }
-        $pid = trim(file_get_contents($this->getLockFilePath()));
-        $pids = explode("\n", trim(shell_exec("ps -e | awk '{print $1}'")));
 
-        if (in_array($pid, $pids)) {
-            return true;
+        $runingPids = explode(',', trim(file_get_contents($this->getPidsFilePath())));
+        $systemPids = explode("\n", trim(shell_exec("ps -e | awk '{print $1}'")));
+
+        $result = true;
+
+        foreach ($runingPids as $pid) {
+            if (false === in_array($pid, $systemPids)) {
+                $this->stopDaemon();
+                $result = false;
+                break;
+            }
         }
 
-        unlink($this->getLockFilePath());
+//        if ($force && count($runingPids) >= $this->threads) {
+//            $result = true;
+//        } elseif ($force && count($runingPids) < $this->threads) {
+//            $result = false;
+//        }
 
-        return false;
+
+        return $result;
+    }
+
+
+    /**
+     * Add pid
+     * @param $pid
+     */
+    protected function addPid($pid)
+    {
+        $pids = '';
+        if (file_exists($this->getPidsFilePath())) {
+            $pids = file_get_contents($this->getPidsFilePath(), $pid);
+        }
+        $pids .= empty($pids) ? $pid : (',' . $pid);
+        file_put_contents($this->getPidsFilePath(), $pids);
     }
 
     /**
@@ -155,22 +182,24 @@ class WorkerCommand extends CConsoleCommand
      *
      * @return string
      */
-    private function getLockFilePath()
+    protected function getPidsFilePath()
     {
-        return Yii::app()->basePath . DIRECTORY_SEPARATOR . 'runtime' . DIRECTORY_SEPARATOR . $this->pidFile;
+        $pidFile = 'laravel5queue-' . md5($this->queue . $this->connection) . '.pid';
+
+        return Yii::app()->basePath . DIRECTORY_SEPARATOR . 'runtime' . DIRECTORY_SEPARATOR . $pidFile;
     }
 
     /**
      * Run queue worker
-     * 
+     *
      * @author Virchenko Maksim <muslim1992@gmail.com>
      */
-    private function runWorker()
+    protected function worker()
     {
         $queueManager = Yii::app()->laravel5queue->connect();
 
-        $this->worker = new Worker($queueManager->getQueueManager(), new MongoFailedJobProvider(Yii::app()->mongodb, 'YiiJobsFailed'));
-        $this->worker->daemon('default', 'default', $this->delay, $this->memory, $this->sleep, $this->maxTries);
+        $worker = new Worker($queueManager->getQueueManager(), new MongoFailedJobProvider(Yii::app()->mongodb, 'YiiJobsFailed'));
+        $worker->setDaemonExceptionHandler(new DaemonExceptionHandler());
+        $worker->daemon($this->connection, $this->queue, $this->delay, $this->memory, $this->sleep, $this->maxTries);
     }
-
 }
