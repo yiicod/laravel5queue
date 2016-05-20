@@ -14,7 +14,6 @@ use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\WorkerStopping;
 use Illuminate\Queue\Failed\FailedJobProviderInterface;
 use Illuminate\Queue\QueueManager;
-use ReflectionClass;
 use Throwable;
 use yiicod\laravel5queue\handlers\FatalThrowableError;
 
@@ -67,7 +66,7 @@ class Worker
      * @param  QueueManager $manager
      * @param  FailedJobProviderInterface $failer
      * @param  Dispatcher $events
-     * @return void
+     *
      */
     public function __construct(QueueManager $manager, FailedJobProviderInterface $failer = null, Dispatcher $events = null)
     {
@@ -85,6 +84,7 @@ class Worker
      * @param  int $memory
      * @param  int $sleep
      * @param  int $maxTries
+     *
      * @return array
      */
     public function daemon($connectionName, $queue = null, $delay = 0, $memory = 128, $sleep = 3, $maxTries = 0)
@@ -114,6 +114,7 @@ class Worker
      * @param  int $delay
      * @param  int $sleep
      * @param  int $maxTries
+     *
      * @return void
      */
     protected function runNextJobForDaemon($connectionName, $queue, $delay, $sleep, $maxTries)
@@ -138,10 +139,9 @@ class Worker
      */
     protected function daemonShouldRun()
     {
-//        if (YII_DEBUG) {
-//            return false;
-//        }
-//        return $this->events->until('illuminate.queue.looping') !== false;
+        /**
+         * @todo Add some logic if needed
+         */
         return true;
     }
 
@@ -153,6 +153,7 @@ class Worker
      * @param  int $delay
      * @param  int $sleep
      * @param  int $maxTries
+     *
      * @return array
      */
     public function pop($connectionName, $queue = null, $delay = 0, $sleep = 3, $maxTries = 0)
@@ -162,8 +163,8 @@ class Worker
         $job = $this->getNextJob($connection, $queue);
 
         //If job equal TRUE this this is async job was run
-        if(true === $job){
-            return ;
+        if (true === $job) {
+            return;
         }
         // If we're able to pull a job off of the stack, we will process it and
         // then immediately return back out. If there is no job on the queue
@@ -184,6 +185,7 @@ class Worker
      *
      * @param  Queue $connection
      * @param  string $queue
+     *
      * @return Job|null
      */
     protected function getNextJob($connection, $queue)
@@ -206,6 +208,7 @@ class Worker
      * @param  Job $job
      * @param  int $maxTries
      * @param  int $delay
+     *
      * @return array|null
      *
      * @throws \Throwable
@@ -248,6 +251,7 @@ class Worker
      *
      * @param  string $connection
      * @param  Job $job
+     *
      * @return void
      */
     protected function raiseAfterJobEvent($connection, Job $job)
@@ -264,6 +268,7 @@ class Worker
      *
      * @param  string $connection
      * @param  Job $job
+     *
      * @return array
      */
     protected function logFailedJob($connection, Job $job)
@@ -286,6 +291,7 @@ class Worker
      *
      * @param  string $connection
      * @param  Job $job
+     *
      * @return void
      */
     protected function raiseFailedJobEvent($connection, Job $job)
@@ -301,6 +307,7 @@ class Worker
      * Determine if the memory limit has been exceeded.
      *
      * @param  int $memoryLimit
+     *
      * @return bool
      */
     public function memoryExceeded($memoryLimit)
@@ -324,6 +331,7 @@ class Worker
      * Sleep the script for a given number of seconds.
      *
      * @param  int $seconds
+     *
      * @return void
      */
     public function sleep($seconds)
@@ -347,6 +355,7 @@ class Worker
      * Determine if the queue worker should restart.
      *
      * @param  int|null $lastRestart
+     *
      * @return bool
      */
     protected function queueShouldRestart($lastRestart)
@@ -358,6 +367,7 @@ class Worker
      * Set the exception handler to use in Daemon mode.
      *
      * @param  ExceptionHandler $handler
+     *
      * @return void
      */
     public function setDaemonExceptionHandler(ExceptionHandler $handler)
@@ -369,6 +379,7 @@ class Worker
      * Set the cache repository implementation.
      *
      * @param  Repository $cache
+     *
      * @return void
      */
     public function setCache(CacheContract $cache)
@@ -390,6 +401,7 @@ class Worker
      * Set the queue manager instance.
      *
      * @param  QueueManager $manager
+     *
      * @return void
      */
     public function setManager(QueueManager $manager)
