@@ -49,11 +49,11 @@ class MongoQueue extends Queue implements QueueContract
     /**
      * Create a new database queue instance.
      *
-     * @param  MongoDB connection $mongo
+     * @param $mongo
      * @param  string $table
      * @param  string $default
      * @param  int $expire
-     * @return void
+     *
      */
     public function __construct($mongo, $table, $default = 'default', $expire = 60)
     {
@@ -69,6 +69,7 @@ class MongoQueue extends Queue implements QueueContract
      * @param  string $job
      * @param  mixed $data
      * @param  string $queue
+     *
      * @return mixed
      */
     public function push($job, $data = '', $queue = null)
@@ -82,6 +83,7 @@ class MongoQueue extends Queue implements QueueContract
      * @param  string $job
      * @param  mixed $data
      * @param  string $queue
+     *
      * @return mixed
      */
     public function exists($job, $data = '', $queue = null)
@@ -98,6 +100,7 @@ class MongoQueue extends Queue implements QueueContract
      * @param  string $payload
      * @param  string $queue
      * @param  array $options
+     *
      * @return mixed
      */
     public function pushRaw($payload, $queue = null, array $options = [])
@@ -112,6 +115,7 @@ class MongoQueue extends Queue implements QueueContract
      * @param  string $job
      * @param  mixed $data
      * @param  string $queue
+     *
      * @return void
      */
     public function later($delay, $job, $data = '', $queue = null)
@@ -125,6 +129,7 @@ class MongoQueue extends Queue implements QueueContract
      * @param  array $jobs
      * @param  mixed $data
      * @param  string $queue
+     *
      * @return mixed
      */
     public function bulk($jobs, $data = '', $queue = null)
@@ -146,6 +151,7 @@ class MongoQueue extends Queue implements QueueContract
      * @param  string $queue
      * @param  \StdClass $job
      * @param  int $delay
+     *
      * @return mixed
      */
     public function release($queue, $job, $delay)
@@ -160,6 +166,7 @@ class MongoQueue extends Queue implements QueueContract
      * @param  string|null $queue
      * @param  string $payload
      * @param  int $attempts
+     *
      * @return mixed
      */
     protected function pushToDatabase($delay, $queue, $payload, $attempts = 0)
@@ -173,6 +180,7 @@ class MongoQueue extends Queue implements QueueContract
      * Pop the next job off of the queue.
      *
      * @param  string $queue
+     *
      * @return Job|null
      */
     public function pop($queue = null)
@@ -194,6 +202,7 @@ class MongoQueue extends Queue implements QueueContract
      * Release the jobs that have been reserved for too long.
      *
      * @param  string $queue
+     *
      * @return void
      */
     protected function releaseJobsThatHaveBeenReservedTooLong($queue)
@@ -218,24 +227,19 @@ class MongoQueue extends Queue implements QueueContract
      * Get the next available job for the queue.
      *
      * @param  string|null $queue
+     *
      * @return \StdClass|null/
      */
     protected function getNextAvailableJob($queue)
     {
         $job = $this->database->{$this->table}
-            ->findOneAndUpdate([
+            ->findOne([
                 'queue' => $this->getQueue($queue),
                 'reserved' => 0,
                 '$or' => [
                     ['reserved_at' => null],
                     ['reserved_at' => ['$lte' => $this->getTime()]],
                 ],
-            ], [
-                '$set' => [
-                    'reserved' => 0,
-                    'reserved_at' => null,
-                ],
-                '$inc' => ['attempts' => 1],
             ], [
                 'sort' => ['id' => 1],
             ]);
@@ -247,6 +251,7 @@ class MongoQueue extends Queue implements QueueContract
      * Mark the given job ID as reserved.
      *
      * @param  string $id
+     *
      * @return void
      */
     protected function markJobAsReserved($id)
@@ -264,6 +269,7 @@ class MongoQueue extends Queue implements QueueContract
      *
      * @param  string $queue
      * @param  string $id
+     *
      * @return void
      */
     public function deleteReserved($queue, $id)
@@ -275,6 +281,7 @@ class MongoQueue extends Queue implements QueueContract
      * Get the "available at" UNIX timestamp.
      *
      * @param  DateTime|int $delay
+     *
      * @return int
      */
     protected function getAvailableAt($delay)
@@ -291,6 +298,7 @@ class MongoQueue extends Queue implements QueueContract
      * @param  string $payload
      * @param  int $availableAt
      * @param  int $attempts
+     *
      * @return array
      */
     protected function buildDatabaseRecord($queue, $payload, $availableAt, $attempts = 0)
@@ -310,6 +318,7 @@ class MongoQueue extends Queue implements QueueContract
      * Get the queue or return the default.
      *
      * @param  string|null $queue
+     *
      * @return string
      */
     protected function getQueue($queue)
@@ -341,6 +350,7 @@ class MongoQueue extends Queue implements QueueContract
      * Set the expiration time in seconds.
      *
      * @param  int|null $seconds
+     *
      * @return void
      */
     public function setExpire($seconds)
