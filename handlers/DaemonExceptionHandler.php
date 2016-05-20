@@ -14,6 +14,9 @@ use Yii;
  */
 class DaemonExceptionHandler implements ExceptionHandler
 {
+    /**
+     * DaemonExceptionHandler constructor.
+     */
     public function __construct()
     {
         // automatically send every new message to available log routes
@@ -27,6 +30,7 @@ class DaemonExceptionHandler implements ExceptionHandler
      * Report or log an exception.
      *
      * @param  \Exception $e
+     *
      * @return void
      */
     public function report(Exception $e)
@@ -40,11 +44,12 @@ class DaemonExceptionHandler implements ExceptionHandler
      *
      * @param  \CHttpRequest $request
      * @param  \Exception $e
+     *
      * @return void
      */
     public function render($request, Exception $e)
     {
-        return ;
+        return;
     }
 
     /**
@@ -52,10 +57,11 @@ class DaemonExceptionHandler implements ExceptionHandler
      *
      * @param  \Symfony\Component\Console\Output\OutputInterface $output
      * @param  \Exception $e
+     *
      * @return void
      */
     public function renderForConsole($output, Exception $e)
     {
-        return ;
+        return;
     }
 }
