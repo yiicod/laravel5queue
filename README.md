@@ -3,6 +3,12 @@ Laravel5 Queue
 Branch 1.0 for php 5.6
 Branch master for php 7.0
 
+installation
+____________________________________________________________________________________
+```php
+php composer require yiicod/laravel5queue
+```
+
 First of all add laravel5queue component to Yii config (console and main) like this:
 ------------------------------------------------------------------------------------
 ```php
