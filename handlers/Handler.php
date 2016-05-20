@@ -7,17 +7,17 @@ use yiicod\laravel5queue\base\BaseHandlerInterface;
 
 /**
  * Handler for queue jobs
- * 
+ *
  * @author Virchenko Maksim <muslim1992@gmail.com>
  */
 abstract class Handler implements BaseHandlerInterface
 {
 
     /**
-     * Run job with restarting connection
-     * 
+     * Run job with restarting db connection
+     *
      * @author Virchenko Maksim <muslim1992@gmail.com>
-     * 
+     *
      * @param type $job
      * @param type $data
      */
