@@ -1,7 +1,6 @@
 <?php
 namespace yiicod\laravel5queue\queues;
 
-use Carbon\Carbon;
 use DateTime;
 use Symfony\Component\Process\Process;
 use yiicod\laravel5queue\jobs\MongoJob;
@@ -70,6 +69,7 @@ class AsyncMongoQueue extends MongoQueue
      * @param  string $payload
      * @param  string $queue
      * @param  array $options
+     *
      * @return mixed
      */
     public function pushRaw($payload, $queue = null, array $options = array())
@@ -102,6 +102,7 @@ class AsyncMongoQueue extends MongoQueue
      * Pop the next job off of the queue.
      *
      * @param  string $queue
+     *
      * @return Job|null
      */
     public function pop($queue = null)
@@ -141,7 +142,7 @@ class AsyncMongoQueue extends MongoQueue
 //                'created_at' => $this->getTime(),
 //            ]);
 //        } else {
-            $result = parent::pushToDatabase($delay, $queue, $payload, $attempts);
+        $result = parent::pushToDatabase($delay, $queue, $payload, $attempts);
 //        }
         return (string)$result->getInsertedId();
     }
@@ -149,8 +150,11 @@ class AsyncMongoQueue extends MongoQueue
     /**
      * Get the next available job for the queue.
      *
-     * @param  string|null $queue
-     * @return \StdClass|null
+     * @param $id
+     *
+     * @return null|\StdClass
+     * @internal param null|string $queue
+     *
      */
     public function getJobFromId($id)
     {
@@ -162,10 +166,10 @@ class AsyncMongoQueue extends MongoQueue
     /**
      * Make a Process for the Artisan command for the job id.
      *
-     * @param int $jobId
-     * @param int $delay
+     * @param $id
      *
-     * @return void
+     * @internal param int $jobId
+     * @internal param int $delay
      */
     public function startProcess($id)
     {
@@ -177,7 +181,7 @@ class AsyncMongoQueue extends MongoQueue
 
             $process = new Process($command, $cwd);
             $process->run();
-        }else{
+        } else {
             sleep(1);
         }
     }
@@ -185,10 +189,11 @@ class AsyncMongoQueue extends MongoQueue
     /**
      * Get the Artisan command as a string for the job id.
      *
-     * @param int $jobId
-     * @param int $delay
+     * @param $id
      *
      * @return string
+     * @internal param int $jobId
+     * @internal param int $delay
      */
     protected function getCommand($id)
     {
@@ -220,11 +225,23 @@ class AsyncMongoQueue extends MongoQueue
         return trim($path . ' ' . $args);
     }
 
+    /**
+     * Return Yiic file path
+     *
+     * @return bool|mixed|string
+     */
     protected function getYiicPath()
     {
         return \Yii::getPathOfAlias($this->yiicAlias);
     }
 
+    /**
+     * Return background command
+     *
+     * @param $cmd
+     *
+     * @return string
+     */
     protected function getBackgroundCommand($cmd)
     {
         if (defined('PHP_WINDOWS_VERSION_BUILD')) {
