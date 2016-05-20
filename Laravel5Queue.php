@@ -16,7 +16,11 @@ use yiicod\laravel5queue\connectors\MongoConnector;
  */
 class Laravel5Queue extends CApplicationComponent
 {
-
+    /**
+     * Available connections
+     *
+     * @var array
+     */
     public $connections = [
         'default' => [
             'driver' => 'mongoQueue',
@@ -35,14 +39,22 @@ class Laravel5Queue extends CApplicationComponent
         ]
     ];
 
+    /**
+     * Encrypter private key
+     *
+     * @var string
+     */
     public $privateKey = 'rc5lgpue80sr17nx';
 
+    /**
+     * QueueManager instance
+     *
+     * @var
+     */
     private $queueManager;
 
     /**
-     * Initialize
-     *
-     * @author Virchenko Maksim <muslim1992@gmail.com>
+     * Initialize component
      */
     public function init()
     {
@@ -54,7 +66,6 @@ class Laravel5Queue extends CApplicationComponent
     /**
      * Connect queue manager for mongo database
      *
-     * @author Virchenko Maksim <muslim1992@gmail.com>
      * @return Manager
      */
     public function connect()
@@ -71,10 +82,10 @@ class Laravel5Queue extends CApplicationComponent
 
         //Connector to successful jobs
         $this->queueManager->addConnector('mongoQueue', function () {
-            return new MongoConnector(Yii::app()->mongodb, 'YiiJobsSuccessed');
+            return new MongoConnector(Yii::app()->mongodb);
         });
         $this->queueManager->addConnector('asyncMongoQueue', function () {
-            return new AsyncMongoConnector(Yii::app()->mongodb, 'YiiJobsSuccessed');
+            return new AsyncMongoConnector(Yii::app()->mongodb);
         });
         foreach ($this->connections as $name => $params) {
             $this->queueManager->addConnection($params, $name);
@@ -90,6 +101,7 @@ class Laravel5Queue extends CApplicationComponent
      * Push new job to queue
      *
      * @author Virchenko Maksim <muslim1992@gmail.com>
+     *
      * @param mixed $handler
      * @param array $data
      * @param string $queue
@@ -97,17 +109,12 @@ class Laravel5Queue extends CApplicationComponent
      */
     public function push($handler, $data = [], $queue = 'default', $connection = 'default')
     {
-//        if (is_callable($handler)) {
-//            $this->queueManager->getConnection($queue)->push($handler);
-//        } else {
         Manager::push($handler, $data, $queue, $connection);
-//        }
     }
 
     /**
      * Push new job to queue if this job is not exist
      *
-     * @author Virchenko Maksim <muslim1992@gmail.com>
      * @param mixed $handler
      * @param array $data
      * @param string $queue
@@ -127,6 +134,7 @@ class Laravel5Queue extends CApplicationComponent
      * @param  mixed $data
      * @param  string $queue
      * @param  string $connection
+     *
      * @return mixed
      */
     public static function bulk($jobs, $data = '', $queue = null, $connection = null)
@@ -142,6 +150,7 @@ class Laravel5Queue extends CApplicationComponent
      * @param  mixed $data
      * @param  string $queue
      * @param  string $connection
+     *
      * @return mixed
      */
     public static function later($delay, $job, $data = '', $queue = null, $connection = null)
