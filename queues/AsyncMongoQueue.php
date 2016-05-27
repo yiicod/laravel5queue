@@ -59,7 +59,7 @@ class AsyncMongoQueue extends MongoQueue
     public function push($job, $data = '', $queue = null)
     {
         $id = parent::push($job, $data, $queue);
-        $this->startProcess($id);
+        //$this->startProcess($id);
 
         return $id;
     }
@@ -75,7 +75,7 @@ class AsyncMongoQueue extends MongoQueue
     public function pushRaw($payload, $queue = null, array $options = array())
     {
         $id = parent::pushRaw($payload, $queue, $options);
-        $this->startProcess($id);
+        //$this->startProcess($id);
 
         return $id;
     }
@@ -93,7 +93,7 @@ class AsyncMongoQueue extends MongoQueue
     public function later($delay, $job, $data = '', $queue = null)
     {
         $id = parent::later($delay, $job, $data, $queue);
-        $this->startProcess($id);
+        //$this->startProcess($id);
 
         return $id;
     }

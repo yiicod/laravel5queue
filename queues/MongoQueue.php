@@ -226,16 +226,17 @@ class MongoQueue extends Queue implements QueueContract
             ->findOneAndUpdate([
                 'queue' => $this->getQueue($queue),
                 'reserved' => 0,
-                '$or' => [
-                    ['reserved_at' => null],
-                    ['reserved_at' => ['$lte' => $this->getTime()]],
-                ],
+                'reserved_at' => null
+//                ['reserved_at' => ['$lte' => $this->getTime()]]
+//                '$or' => [
+//                    ['reserved_at' => null],
+//                    ['reserved_at' => ['$lte' => $this->getTime()]],
+//                ],
             ], [
                 '$set' => [
                     'reserved' => 0,
                     'reserved_at' => null,
                 ],
-                '$inc' => ['attempts' => 1],
             ], [
                 'sort' => ['id' => 1],
             ]);
@@ -255,7 +256,8 @@ class MongoQueue extends Queue implements QueueContract
             '$set' => [
                 'reserved' => 1,
                 'reserved_at' => $this->getTime(),
-            ]
+            ],
+            //'$inc' => ['attempts' => 1],
         ]);
     }
 
