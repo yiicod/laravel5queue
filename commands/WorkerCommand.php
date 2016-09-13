@@ -63,8 +63,10 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
 
     /**
      * Default action. Starts daemon.
+     * @param string $connection
+     * @param string $queue
      */
-    public function actionStart($connection, $queue/*, $force = 0*/)
+    public function actionStart($connection = 'default', $queue = 'default')
     {
         $this->queue = $queue;
         $this->connection = $connection;
@@ -73,10 +75,11 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
 
     /**
      * Stops daemon.
-     *
      * Close server and close all connections.
+     * @param string $connection
+     * @param string $queue
      */
-    public function actionStop($connection, $queue)
+    public function actionStop($connection = 'default', $queue = 'default')
     {
         $this->queue = $queue;
         $this->connection = $connection;
@@ -108,9 +111,8 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
             $this->addPid($pid);
         }
 
-        $this->worker();
-
         echo sprintf("[%s] running with PID: %s\n", $this->daemonName, $pid);
+        $this->worker();
     }
 
 
@@ -124,7 +126,7 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
         }
         @unlink($this->getPidsFilePath());
 
-        echo sprintf("[%s] stoped.\n", $this->daemonName);
+        //echo sprintf("[%s] stoped.\n", $this->daemonName);
     }
 
     /**

@@ -226,8 +226,10 @@ class MongoQueue extends Queue implements QueueContract
             ->findOneAndUpdate([
                 'queue' => $this->getQueue($queue),
                 'reserved' => 0,
-                'reserved_at' => null
-//                ['reserved_at' => ['$lte' => $this->getTime()]]
+                'reserved_at' => null,
+//                [
+                    'available_at' => ['$lte' => $this->getTime()]
+//                ]
 //                '$or' => [
 //                    ['reserved_at' => null],
 //                    ['reserved_at' => ['$lte' => $this->getTime()]],

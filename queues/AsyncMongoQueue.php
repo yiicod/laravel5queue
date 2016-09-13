@@ -124,7 +124,7 @@ class AsyncMongoQueue extends MongoQueue
 
     protected function canRunProcess()
     {
-        return $this->database->{$this->table}->count(['reserved' => 1]) < 10;
+        return $this->database->{$this->table}->count(['reserved' => 1]) < $this->limit;
     }
 
     protected function pushToDatabase($delay, $queue, $payload, $attempts = 0)
