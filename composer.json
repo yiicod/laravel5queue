@@ -20,5 +20,10 @@
         "paragonie/random_compat": "^1.2",
         "jeremeamia/superclosure": "^2.0",
         "symfony/process": "~2.3|~3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "yiicod\\laravel5queue\\": "/"
+        }
     }
 }
