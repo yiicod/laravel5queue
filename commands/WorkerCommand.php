@@ -63,20 +63,25 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
 
     /**
      * Default action. Starts daemon.
+     *
+     * @param string $connection
+     * @param string $queue
      */
-    public function actionStart($connection, $queue/*, $force = 0*/)
+    public function actionStart($connection = 'default', $queue = 'default')
     {
         $this->queue = $queue;
         $this->connection = $connection;
-        $this->createDaemon(/*$force*/);
+        $this->createDaemon();
     }
 
     /**
      * Stops daemon.
-     *
      * Close server and close all connections.
+     *
+     * @param string $connection
+     * @param string $queue
      */
-    public function actionStop($connection, $queue)
+    public function actionStop($connection = 'default', $queue = 'default')
     {
         $this->queue = $queue;
         $this->connection = $connection;
@@ -91,9 +96,9 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
      * Creates daemon.
      * Check is daemon already run and if false then starts daemon and update lock file.
      */
-    protected function createDaemon(/*$force = false*/)
+    protected function createDaemon()
     {
-        if (true === $this->isAlreadyRunning(/*(bool)$force*/)) {
+        if (true === $this->isAlreadyRunning()) {
             echo sprintf("[%s] is running already.\n", $this->daemonName);
             Yii::app()->end();
         }
@@ -108,12 +113,13 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
             $this->addPid($pid);
         }
 
-        $this->worker();
-
         echo sprintf("[%s] running with PID: %s\n", $this->daemonName, $pid);
+        $this->worker();
     }
 
-
+    /**
+     * Stop daemon if exists.
+     */
     protected function stopDaemon()
     {
         if (file_exists($this->getPidsFilePath())) {
@@ -151,19 +157,13 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
             }
         }
 
-//        if ($force && count($runingPids) >= $this->threads) {
-//            $result = true;
-//        } elseif ($force && count($runingPids) < $this->threads) {
-//            $result = false;
-//        }
-
-
         return $result;
     }
 
 
     /**
      * Add pid
+     *
      * @param $pid
      */
     protected function addPid($pid)

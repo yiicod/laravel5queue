@@ -25,7 +25,6 @@ class AsyncMongoConnector implements ConnectorInterface
      * Create a new connector instance.
      *
      * @param  \Illuminate\Database\ConnectionResolverInterface $connection
-     * @return void
      */
     public function __construct($connection)
     {
@@ -36,6 +35,7 @@ class AsyncMongoConnector implements ConnectorInterface
      * Establish a queue connection.
      *
      * @param  array $config
+     *
      * @return Queue
      */
     public function connect(array $config)

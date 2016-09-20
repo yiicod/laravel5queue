@@ -1,24 +1,29 @@
 {
-  "name": "yiicod/laravel5queue",
-  "type": "yii-extension",
-  "license": "New BSD License",
-  "authors": [
-    {
-      "name": "Alexey Orlov",
-      "email": "aaorlov88@gmail.com",
-      "role": "Developer"
+    "name": "yiicod/laravel5queue",
+    "type": "yii-extension",
+    "license": "New BSD License",
+    "authors": [
+        {
+            "name": "Alexey Orlov",
+            "email": "aaorlov88@gmail.com",
+            "role": "Developer"
+        },
+        {
+            "name": "Virchenko Maksim",
+            "email": "muslim1992@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "illuminate/queue": "5.2.*",
+        "illuminate/encryption": "5.2.*",
+        "paragonie/random_compat": "^1.2",
+        "jeremeamia/superclosure": "^2.0",
+        "symfony/process": "~2.3|~3.0"
     },
-    {
-      "name": "Virchenko Maksim",
-      "email": "muslim1992@gmail.com",
-      "role": "Developer"
+    "autoload": {
+        "psr-4": {
+            "yiicod\\laravel5queue\\": "/"
+        }
     }
-  ],
-  "require": {
-    "illuminate/queue": "^5.2",
-    "illuminate/encryption": "^5.2",
-    "paragonie/random_compat": "^1.2",
-    "jeremeamia/superclosure": "^2.0",
-    "symfony/process": "~2.3|~3.0"
-  }
 }

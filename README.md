@@ -3,13 +3,13 @@ Laravel5 Queue
 Branch 1.0 for php 5.6
 Branch master for php 7.0
 
-First of all add laravel5queue component to Yii config (console and main) like this:
+First of all add laravel5queue component to Yii config (console and main):
 ------------------------------------------------------------------------------------
 ```php
 'components' => ['laravel5queue' => ['class' => 'yiicod\laravel5queue\Laravel5Queue']]
 ```
 
-and console command like this:
+and console command:
 
 ```php
 'queueWorker' => ['class' => 'yiicod\laravel5queue\commands\WorkerCommand'],
@@ -43,7 +43,7 @@ Note: $data - additional data to your handler
 Start worker:
 ------------
 
-run worker daemon with console command like this: 
+run worker daemon with console command: 
 ```php
 $ php yiic queueWorker start
 ```

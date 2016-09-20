@@ -1,11 +1,16 @@
 <?php
 namespace yiicod\laravel5queue\queues;
 
-use Carbon\Carbon;
 use DateTime;
 use Symfony\Component\Process\Process;
 use yiicod\laravel5queue\jobs\MongoJob;
 
+/**
+ * Class AsyncMongoQueue
+ * Mongo queues for async worker
+ *
+ * @package yiicod\laravel5queue\queues
+ */
 class AsyncMongoQueue extends MongoQueue
 {
     /** @var string */
@@ -59,7 +64,7 @@ class AsyncMongoQueue extends MongoQueue
     public function push($job, $data = '', $queue = null)
     {
         $id = parent::push($job, $data, $queue);
-        $this->startProcess($id);
+        //$this->startProcess($id);
 
         return $id;
     }
@@ -70,12 +75,13 @@ class AsyncMongoQueue extends MongoQueue
      * @param  string $payload
      * @param  string $queue
      * @param  array $options
+     *
      * @return mixed
      */
     public function pushRaw($payload, $queue = null, array $options = array())
     {
         $id = parent::pushRaw($payload, $queue, $options);
-        $this->startProcess($id);
+        //$this->startProcess($id);
 
         return $id;
     }
@@ -93,7 +99,7 @@ class AsyncMongoQueue extends MongoQueue
     public function later($delay, $job, $data = '', $queue = null)
     {
         $id = parent::later($delay, $job, $data, $queue);
-        $this->startProcess($id);
+        //$this->startProcess($id);
 
         return $id;
     }
@@ -102,6 +108,7 @@ class AsyncMongoQueue extends MongoQueue
      * Pop the next job off of the queue.
      *
      * @param  string $queue
+     *
      * @return Job|null
      */
     public function pop($queue = null)
@@ -122,11 +129,26 @@ class AsyncMongoQueue extends MongoQueue
         return null;
     }
 
+    /**
+     * Check if process can run
+     *
+     * @return bool
+     */
     protected function canRunProcess()
     {
-        return $this->database->{$this->table}->count(['reserved' => 1]) < 10;
+        return $this->database->{$this->table}->count(['reserved' => 1]) < $this->limit;
     }
 
+    /**
+     * Push work to database
+     *
+     * @param DateTime|int $delay
+     * @param null|string $queue
+     * @param string $payload
+     * @param int $attempts
+     *
+     * @return string
+     */
     protected function pushToDatabase($delay, $queue, $payload, $attempts = 0)
     {
 //        if ($this->canRunProcess()) {
@@ -141,7 +163,7 @@ class AsyncMongoQueue extends MongoQueue
 //                'created_at' => $this->getTime(),
 //            ]);
 //        } else {
-            $result = parent::pushToDatabase($delay, $queue, $payload, $attempts);
+        $result = parent::pushToDatabase($delay, $queue, $payload, $attempts);
 //        }
         return (string)$result->getInsertedId();
     }
@@ -149,8 +171,9 @@ class AsyncMongoQueue extends MongoQueue
     /**
      * Get the next available job for the queue.
      *
-     * @param  string|null $queue
-     * @return \StdClass|null
+     * @param $id
+     *
+     * @return null|\StdClass
      */
     public function getJobFromId($id)
     {
@@ -162,10 +185,7 @@ class AsyncMongoQueue extends MongoQueue
     /**
      * Make a Process for the Artisan command for the job id.
      *
-     * @param int $jobId
-     * @param int $delay
-     *
-     * @return void
+     * @param $id
      */
     public function startProcess($id)
     {
@@ -177,7 +197,7 @@ class AsyncMongoQueue extends MongoQueue
 
             $process = new Process($command, $cwd);
             $process->run();
-        }else{
+        } else {
             sleep(1);
         }
     }
@@ -185,8 +205,7 @@ class AsyncMongoQueue extends MongoQueue
     /**
      * Get the Artisan command as a string for the job id.
      *
-     * @param int $jobId
-     * @param int $delay
+     * @param $id
      *
      * @return string
      */
@@ -220,11 +239,23 @@ class AsyncMongoQueue extends MongoQueue
         return trim($path . ' ' . $args);
     }
 
+    /**
+     * Get path for yiic
+     *
+     * @return mixed
+     */
     protected function getYiicPath()
     {
         return \Yii::getPathOfAlias($this->yiicAlias);
     }
 
+    /**
+     * Get background cmd command
+     *
+     * @param $cmd
+     *
+     * @return string
+     */
     protected function getBackgroundCommand($cmd)
     {
         if (defined('PHP_WINDOWS_VERSION_BUILD')) {
