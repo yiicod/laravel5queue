@@ -97,11 +97,7 @@ class Laravel5Queue extends CApplicationComponent
      */
     public function push($handler, $data = [], $queue = 'default', $connection = 'default')
     {
-//        if (is_callable($handler)) {
-//            $this->queueManager->getConnection($queue)->push($handler);
-//        } else {
-        Manager::push($handler, $data, $queue, $connection);
-//        }
+        return Manager::push($handler, $data, $queue, $connection);
     }
 
     /**
@@ -112,12 +108,14 @@ class Laravel5Queue extends CApplicationComponent
      * @param array $data
      * @param string $queue
      * @param string $connection
+     * @return mixed
      */
     public function pushUnique($handler, $data = [], $queue = 'default', $connection = 'default')
     {
         if (false === Manager::connection($connection)->exists($handler, $data, $queue)) {
-            Manager::push($handler, $data, $queue, $connection);
+            return Manager::push($handler, $data, $queue, $connection);
         }
+        return null;
     }
 
     /**
@@ -131,7 +129,7 @@ class Laravel5Queue extends CApplicationComponent
      */
     public static function bulk($jobs, $data = '', $queue = null, $connection = null)
     {
-        Manager::bulk($jobs, $data, $queue, $connection);
+        return Manager::bulk($jobs, $data, $queue, $connection);
     }
 
     /**
@@ -146,6 +144,6 @@ class Laravel5Queue extends CApplicationComponent
      */
     public static function later($delay, $job, $data = '', $queue = null, $connection = null)
     {
-        Manager::later($delay, $job, $data, $queue, $connection);
+        return Manager::later($delay, $job, $data, $queue, $connection);
     }
 }

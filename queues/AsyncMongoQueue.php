@@ -1,7 +1,6 @@
 <?php
 namespace yiicod\laravel5queue\queues;
 
-use Carbon\Carbon;
 use DateTime;
 use Symfony\Component\Process\Process;
 use yiicod\laravel5queue\jobs\MongoJob;
@@ -48,57 +47,6 @@ class AsyncMongoQueue extends MongoQueue
     }
 
     /**
-     * Push a new job onto the queue.
-     *
-     * @param string $job
-     * @param mixed $data
-     * @param string|null $queue
-     *
-     * @return int
-     */
-    public function push($job, $data = '', $queue = null)
-    {
-        $id = parent::push($job, $data, $queue);
-        //$this->startProcess($id);
-
-        return $id;
-    }
-
-    /**
-     * Push a raw payload onto the queue.
-     *
-     * @param  string $payload
-     * @param  string $queue
-     * @param  array $options
-     * @return mixed
-     */
-    public function pushRaw($payload, $queue = null, array $options = array())
-    {
-        $id = parent::pushRaw($payload, $queue, $options);
-        //$this->startProcess($id);
-
-        return $id;
-    }
-
-    /**
-     * Push a new job onto the queue after a delay.
-     *
-     * @param \DateTime|int $delay
-     * @param string $job
-     * @param mixed $data
-     * @param string|null $queue
-     *
-     * @return int
-     */
-    public function later($delay, $job, $data = '', $queue = null)
-    {
-        $id = parent::later($delay, $job, $data, $queue);
-        //$this->startProcess($id);
-
-        return $id;
-    }
-
-    /**
      * Pop the next job off of the queue.
      *
      * @param  string $queue
@@ -125,25 +73,6 @@ class AsyncMongoQueue extends MongoQueue
     protected function canRunProcess()
     {
         return $this->database->{$this->table}->count(['reserved' => 1]) < $this->limit;
-    }
-
-    protected function pushToDatabase($delay, $queue, $payload, $attempts = 0)
-    {
-//        if ($this->canRunProcess()) {
-//            $availableAt = $delay instanceof DateTime ? $delay : Carbon::now()->addSeconds($delay);
-//            $result = $this->database->{$this->table}->insertOne([
-//                'queue' => $this->getQueue($queue),
-//                'payload' => $payload,
-//                'attempts' => $attempts,
-//                'reserved' => 1,
-//                'reserved_at' => $this->getTime(),
-//                'available_at' => $availableAt->getTimestamp(),
-//                'created_at' => $this->getTime(),
-//            ]);
-//        } else {
-            $result = parent::pushToDatabase($delay, $queue, $payload, $attempts);
-//        }
-        return (string)$result->getInsertedId();
     }
 
     /**
@@ -177,7 +106,7 @@ class AsyncMongoQueue extends MongoQueue
 
             $process = new Process($command, $cwd);
             $process->run();
-        }else{
+        } else {
             sleep(1);
         }
     }
