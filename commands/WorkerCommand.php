@@ -3,10 +3,11 @@
 namespace yiicod\laravel5queue\commands;
 
 use CConsoleCommand;
+use Illuminate\Queue\Capsule\Manager;
 use Yii;
 use yiicod\laravel5queue\base\WorkerInterface;
 use yiicod\laravel5queue\failed\MongoFailedJobProvider;
-use yiicod\laravel5queue\handlers\DaemonExceptionHandler;
+use yiicod\laravel5queue\handlers\ExceptionHandler;
 use yiicod\laravel5queue\Worker;
 
 /**
@@ -63,23 +64,29 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
 
     /**
      * Default action. Starts daemon.
+     *
      * @param string $connection
      * @param string $queue
+     *
+     * @return mixed|void
      */
-    public function actionStart($connection = 'default', $queue = 'default')
+    public function actionStart(string $connection = 'default', string $queue = 'default')
     {
         $this->queue = $queue;
         $this->connection = $connection;
-        $this->createDaemon(/*$force*/);
+        $this->createDaemon();
     }
 
     /**
      * Stops daemon.
      * Close server and close all connections.
+     *
      * @param string $connection
      * @param string $queue
+     *
+     * @return mixed|void
      */
-    public function actionStop($connection = 'default', $queue = 'default')
+    public function actionStop(string $connection = 'default', string $queue = 'default')
     {
         $this->queue = $queue;
         $this->connection = $connection;
@@ -94,9 +101,9 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
      * Creates daemon.
      * Check is daemon already run and if false then starts daemon and update lock file.
      */
-    protected function createDaemon(/*$force = false*/)
+    protected function createDaemon()
     {
-        if (true === $this->isAlreadyRunning(/*(bool)$force*/)) {
+        if (true === $this->isAlreadyRunning()) {
             echo sprintf("[%s] is running already.\n", $this->daemonName);
             Yii::app()->end();
         }
@@ -115,7 +122,9 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
         $this->worker();
     }
 
-
+    /**
+     * Stop daemon
+     */
     protected function stopDaemon()
     {
         if (file_exists($this->getPidsFilePath())) {
@@ -126,7 +135,7 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
         }
         @unlink($this->getPidsFilePath());
 
-        //echo sprintf("[%s] stoped.\n", $this->daemonName);
+        echo sprintf("[%s] stoped.\n", $this->daemonName);
     }
 
     /**
@@ -134,7 +143,7 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
      *
      * @return bool
      */
-    protected function isAlreadyRunning(/*$force = false*/)
+    protected function isAlreadyRunning()
     {
         if (false === file_exists($this->getPidsFilePath())) {
             return false;
@@ -153,19 +162,12 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
             }
         }
 
-//        if ($force && count($runingPids) >= $this->threads) {
-//            $result = true;
-//        } elseif ($force && count($runingPids) < $this->threads) {
-//            $result = false;
-//        }
-
-
         return $result;
     }
 
-
     /**
      * Add pid
+     *
      * @param $pid
      */
     protected function addPid($pid)
@@ -198,10 +200,10 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
      */
     protected function worker()
     {
-        $queueManager = Yii::app()->laravel5queue->connect();
+        /** @var Manager $queueManager */
+        $manager = Yii::app()->laravel5queue->getManager();
 
-        $worker = new Worker($queueManager->getQueueManager(), new MongoFailedJobProvider(Yii::app()->mongodb, 'YiiJobsFailed'));
-        $worker->setDaemonExceptionHandler(new DaemonExceptionHandler());
+        $worker = new Worker($manager->getQueueManager(), new MongoFailedJobProvider(Yii::app()->mongodb, 'YiiJobsFailed'), new ExceptionHandler());
         $worker->daemon($this->connection, $this->queue, $this->delay, $this->memory, $this->sleep, $this->maxTries);
     }
 }

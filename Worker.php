@@ -14,7 +14,6 @@ use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\WorkerStopping;
 use Illuminate\Queue\Failed\FailedJobProviderInterface;
 use Illuminate\Queue\QueueManager;
-use ReflectionClass;
 use Throwable;
 use yiicod\laravel5queue\handlers\FatalThrowableError;
 
@@ -25,7 +24,6 @@ use yiicod\laravel5queue\handlers\FatalThrowableError;
  */
 class Worker
 {
-
     /**
      * The queue manager instance.
      *
@@ -64,43 +62,37 @@ class Worker
     /**
      * Create a new queue worker.
      *
-     * @param  QueueManager $manager
-     * @param  FailedJobProviderInterface $failer
-     * @param  Dispatcher $events
-     * @return void
+     * @param QueueManager $manager
+     * @param FailedJobProviderInterface $failer
+     * @param ExceptionHandler $exceptions
      */
-    public function __construct(QueueManager $manager, FailedJobProviderInterface $failer = null, Dispatcher $events = null)
+    public function __construct(QueueManager $manager,
+                                FailedJobProviderInterface $failer,
+                                ExceptionHandler $exceptions)
     {
-        $this->failer = $failer;
-        $this->events = $events;
         $this->manager = $manager;
+        $this->failer = $failer;
+        $this->exceptions = $exceptions;
     }
 
     /**
      * Listen to the given queue in a loop.
      *
-     * @param  string $connectionName
-     * @param  string $queue
-     * @param  int $delay
-     * @param  int $memory
-     * @param  int $sleep
-     * @param  int $maxTries
-     * @return array
+     * @param string $connectionName
+     * @param string $queue
+     * @param int $delay
+     * @param int $memory
+     * @param int $sleep
+     * @param int $maxTries
      */
     public function daemon($connectionName, $queue = null, $delay = 0, $memory = 128, $sleep = 3, $maxTries = 0)
     {
-        $lastRestart = $this->getTimestampOfLastQueueRestart();
-
         while (true) {
-            if ($this->daemonShouldRun()) {
-                $this->runNextJobForDaemon(
-                    $connectionName, $queue, $delay, $sleep, $maxTries
-                );
-            } else {
-                $this->sleep($sleep);
-            }
+            $this->runNextJobForDaemon(
+                $connectionName, $queue, $delay, $sleep, $maxTries
+            );
 
-            if ($this->memoryExceeded($memory) || $this->queueShouldRestart($lastRestart)) {
+            if ($this->memoryExceeded($memory)) {
                 $this->stop();
             }
         }
@@ -109,11 +101,12 @@ class Worker
     /**
      * Run the next job for the daemon worker.
      *
-     * @param  string $connectionName
-     * @param  string $queue
-     * @param  int $delay
-     * @param  int $sleep
-     * @param  int $maxTries
+     * @param string $connectionName
+     * @param string $queue
+     * @param int $delay
+     * @param int $sleep
+     * @param int $maxTries
+     *
      * @return void
      */
     protected function runNextJobForDaemon($connectionName, $queue, $delay, $sleep, $maxTries)
@@ -132,27 +125,14 @@ class Worker
     }
 
     /**
-     * Determine if the daemon should process on this iteration.
-     *
-     * @return bool
-     */
-    protected function daemonShouldRun()
-    {
-//        if (YII_DEBUG) {
-//            return false;
-//        }
-//        return $this->events->until('illuminate.queue.looping') !== false;
-        return true;
-    }
-
-    /**
      * Listen to the given queue.
      *
-     * @param  string $connectionName
-     * @param  string $queue
-     * @param  int $delay
-     * @param  int $sleep
-     * @param  int $maxTries
+     * @param string $connectionName
+     * @param string $queue
+     * @param int $delay
+     * @param int $sleep
+     * @param int $maxTries
+     *
      * @return array
      */
     public function pop($connectionName, $queue = null, $delay = 0, $sleep = 3, $maxTries = 0)
@@ -162,8 +142,8 @@ class Worker
         $job = $this->getNextJob($connection, $queue);
 
         //If job equal TRUE this this is async job was run
-        if(true === $job){
-            return ;
+        if (true === $job) {
+            return;
         }
         // If we're able to pull a job off of the stack, we will process it and
         // then immediately return back out. If there is no job on the queue
@@ -182,8 +162,9 @@ class Worker
     /**
      * Get the next job from the queue connection.
      *
-     * @param  Queue $connection
-     * @param  string $queue
+     * @param Queue $connection
+     * @param string $queue
+     *
      * @return Job|null
      */
     protected function getNextJob($connection, $queue)
@@ -197,15 +178,18 @@ class Worker
                 return $job;
             }
         }
+
+        return null;
     }
 
     /**
      * Process a given job from the queue.
      *
-     * @param  string $connection
-     * @param  Job $job
-     * @param  int $maxTries
-     * @param  int $delay
+     * @param string $connection
+     * @param Job $job
+     * @param int $maxTries
+     * @param int $delay
+     *
      * @return array|null
      *
      * @throws \Throwable
@@ -246,8 +230,9 @@ class Worker
     /**
      * Raise the after queue job event.
      *
-     * @param  string $connection
-     * @param  Job $job
+     * @param string $connection
+     * @param Job $job
+     *
      * @return void
      */
     protected function raiseAfterJobEvent($connection, Job $job)
@@ -262,8 +247,9 @@ class Worker
     /**
      * Log a failed job into storage.
      *
-     * @param  string $connection
-     * @param  Job $job
+     * @param string $connection
+     * @param Job $job
+     *
      * @return array
      */
     protected function logFailedJob($connection, Job $job)
@@ -284,8 +270,9 @@ class Worker
     /**
      * Raise the failed queue job event.
      *
-     * @param  string $connection
-     * @param  Job $job
+     * @param string $connection
+     * @param Job $job
+     *
      * @return void
      */
     protected function raiseFailedJobEvent($connection, Job $job)
@@ -300,7 +287,8 @@ class Worker
     /**
      * Determine if the memory limit has been exceeded.
      *
-     * @param  int $memoryLimit
+     * @param int $memoryLimit
+     *
      * @return bool
      */
     public function memoryExceeded($memoryLimit)
@@ -323,7 +311,8 @@ class Worker
     /**
      * Sleep the script for a given number of seconds.
      *
-     * @param  int $seconds
+     * @param int $seconds
+     *
      * @return void
      */
     public function sleep($seconds)
@@ -346,7 +335,8 @@ class Worker
     /**
      * Determine if the queue worker should restart.
      *
-     * @param  int|null $lastRestart
+     * @param int|null $lastRestart
+     *
      * @return bool
      */
     protected function queueShouldRestart($lastRestart)
@@ -357,7 +347,8 @@ class Worker
     /**
      * Set the exception handler to use in Daemon mode.
      *
-     * @param  ExceptionHandler $handler
+     * @param ExceptionHandler $handler
+     *
      * @return void
      */
     public function setDaemonExceptionHandler(ExceptionHandler $handler)
@@ -368,7 +359,8 @@ class Worker
     /**
      * Set the cache repository implementation.
      *
-     * @param  Repository $cache
+     * @param Repository $cache
+     *
      * @return void
      */
     public function setCache(CacheContract $cache)
@@ -389,12 +381,12 @@ class Worker
     /**
      * Set the queue manager instance.
      *
-     * @param  QueueManager $manager
+     * @param QueueManager $manager
+     *
      * @return void
      */
     public function setManager(QueueManager $manager)
     {
         $this->manager = $manager;
     }
-
 }

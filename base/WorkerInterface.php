@@ -1,10 +1,30 @@
 <?php
+
 namespace yiicod\laravel5queue\base;
 
+/**
+ * Interface WorkerInterface
+ * @package yiicod\laravel5queue\base\
+ */
 interface WorkerInterface
 {
-    public function actionStart($connection, $queue/*, $force*/);
+    /**
+     * Start worker
+     *
+     * @param $connection
+     * @param $queue
+     *
+     * @return mixed
+     */
+    public function actionStart(string $connection, string $queue);
 
-    public function actionStop($connection, $queue);
-    
+    /**
+     * Stop worker
+     *
+     * @param $connection
+     * @param $queue
+     *
+     * @return mixed
+     */
+    public function actionStop(string $connection, string $queue);
 }

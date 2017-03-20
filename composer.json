@@ -19,7 +19,8 @@
         "illuminate/encryption": "^5.2",
         "paragonie/random_compat": "^1.2",
         "jeremeamia/superclosure": "^2.0",
-        "symfony/process": "~2.3|~3.0"
+        "symfony/process": "~2.3|~3.0",
+        "sammaye/mongoyii-php7": "*"
     },
     "autoload": {
         "psr-4": {

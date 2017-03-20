@@ -9,12 +9,11 @@ use yiicod\laravel5queue\queues\MongoQueue;
 
 /**
  * MongoJob for laravel queue
- * 
+ *
  * @author Virchenko Maksim <muslim1992@gmail.com>
  */
 class MongoJob extends Job implements JobContract
 {
-
     /**
      * The database queue instance.
      *
@@ -32,11 +31,10 @@ class MongoJob extends Job implements JobContract
     /**
      * Create a new job instance.
      *
-     * @param  Container  $container
-     * @param  MongoQueue  $database
-     * @param  \StdClass  $job
-     * @param  string  $queue
-     * @return void
+     * @param  Container $container
+     * @param  MongoQueue $database
+     * @param  \StdClass $job
+     * @param  string $queue
      */
     public function __construct(Container $container, MongoQueue $database, $job, $queue)
     {
@@ -66,13 +64,14 @@ class MongoJob extends Job implements JobContract
     {
         parent::delete();
 
-        $this->database->deleteReserved($this->queue, (string) $this->job->_id);
+        $this->database->deleteReserved($this->queue, (string)$this->job->_id);
     }
 
     /**
      * Release the job back into the queue.
      *
-     * @param  int  $delay
+     * @param  int $delay
+     *
      * @return void
      */
     public function release($delay = 0)
@@ -91,7 +90,7 @@ class MongoJob extends Job implements JobContract
      */
     public function attempts()
     {
-        return (int) $this->job->attempts;
+        return (int)$this->job->attempts;
     }
 
     /**
@@ -101,7 +100,7 @@ class MongoJob extends Job implements JobContract
      */
     public function getJobId()
     {
-        return (string) $this->job->_id;
+        return (string)$this->job->_id;
     }
 
     /**
@@ -143,5 +142,4 @@ class MongoJob extends Job implements JobContract
     {
         return $this->job;
     }
-
 }

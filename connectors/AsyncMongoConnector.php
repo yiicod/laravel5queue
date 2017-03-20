@@ -2,7 +2,6 @@
 
 namespace yiicod\laravel5queue\connectors;
 
-
 use Illuminate\Contracts\Queue\Queue;
 use Illuminate\Queue\Connectors\ConnectorInterface;
 use yiicod\laravel5queue\queues\AsyncMongoQueue;
@@ -14,7 +13,6 @@ use yiicod\laravel5queue\queues\AsyncMongoQueue;
  */
 class AsyncMongoConnector implements ConnectorInterface
 {
-
     /**
      * Database connections.
      *
@@ -25,7 +23,6 @@ class AsyncMongoConnector implements ConnectorInterface
      * Create a new connector instance.
      *
      * @param  \Illuminate\Database\ConnectionResolverInterface $connection
-     * @return void
      */
     public function __construct($connection)
     {
@@ -36,6 +33,7 @@ class AsyncMongoConnector implements ConnectorInterface
      * Establish a queue connection.
      *
      * @param  array $config
+     *
      * @return Queue
      */
     public function connect(array $config)
@@ -50,5 +48,4 @@ class AsyncMongoConnector implements ConnectorInterface
 
         return new AsyncMongoQueue($this->connection, $config['table'], $config['queue'], $config['expire'], $config['limit'], $config['yiicAlias'], $config['binary'], $config['binaryArgs'], $config['connectionName']);
     }
-
 }

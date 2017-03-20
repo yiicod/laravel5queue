@@ -16,7 +16,11 @@ use yiicod\laravel5queue\connectors\MongoConnector;
  */
 class Laravel5Queue extends CApplicationComponent
 {
-
+    /**
+     * Available connections
+     *
+     * @var array
+     */
     public $connections = [
         'default' => [
             'driver' => 'mongoQueue',
@@ -35,8 +39,18 @@ class Laravel5Queue extends CApplicationComponent
         ]
     ];
 
+    /**
+     * Private key
+     *
+     * @var string
+     */
     public $privateKey = 'rc5lgpue80sr17nx';
 
+    /**
+     * Manager instance
+     *
+     * @var
+     */
     private $queueManager;
 
     /**
@@ -53,11 +67,8 @@ class Laravel5Queue extends CApplicationComponent
 
     /**
      * Connect queue manager for mongo database
-     *
-     * @author Virchenko Maksim <muslim1992@gmail.com>
-     * @return Manager
      */
-    public function connect()
+    protected function connect()
     {
         $this->queueManager = new Manager();
 
@@ -82,7 +93,15 @@ class Laravel5Queue extends CApplicationComponent
 
         //Set as global to access
         $this->queueManager->setAsGlobal();
+    }
 
+    /**
+     * Get queue manager
+     *
+     * @return mixed
+     */
+    public function getManager()
+    {
         return $this->queueManager;
     }
 
@@ -90,12 +109,15 @@ class Laravel5Queue extends CApplicationComponent
      * Push new job to queue
      *
      * @author Virchenko Maksim <muslim1992@gmail.com>
+     *
      * @param mixed $handler
      * @param array $data
      * @param string $queue
      * @param string $connection
+     *
+     * @return mixed
      */
-    public function push($handler, $data = [], $queue = 'default', $connection = 'default')
+    public static function push($handler, $data = [], $queue = 'default', $connection = 'default')
     {
         return Manager::push($handler, $data, $queue, $connection);
     }
@@ -104,17 +126,20 @@ class Laravel5Queue extends CApplicationComponent
      * Push new job to queue if this job is not exist
      *
      * @author Virchenko Maksim <muslim1992@gmail.com>
+     *
      * @param mixed $handler
      * @param array $data
      * @param string $queue
      * @param string $connection
+     *
      * @return mixed
      */
-    public function pushUnique($handler, $data = [], $queue = 'default', $connection = 'default')
+    public static function pushUnique($handler, $data = [], $queue = 'default', $connection = 'default')
     {
         if (false === Manager::connection($connection)->exists($handler, $data, $queue)) {
             return Manager::push($handler, $data, $queue, $connection);
         }
+
         return null;
     }
 
@@ -125,6 +150,7 @@ class Laravel5Queue extends CApplicationComponent
      * @param  mixed $data
      * @param  string $queue
      * @param  string $connection
+     *
      * @return mixed
      */
     public static function bulk($jobs, $data = '', $queue = null, $connection = null)
@@ -140,6 +166,7 @@ class Laravel5Queue extends CApplicationComponent
      * @param  mixed $data
      * @param  string $queue
      * @param  string $connection
+     *
      * @return mixed
      */
     public static function later($delay, $job, $data = '', $queue = null, $connection = null)

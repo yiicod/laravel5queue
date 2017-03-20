@@ -4,6 +4,7 @@ namespace yiicod\laravel5queue\failed;
 
 use Carbon\Carbon;
 use Illuminate\Queue\Failed\FailedJobProviderInterface;
+use sammaye\mongoyii\Collection;
 
 /**
  * Mongo provider for failed jobs
@@ -12,7 +13,6 @@ use Illuminate\Queue\Failed\FailedJobProviderInterface;
  */
 class MongoFailedJobProvider implements FailedJobProviderInterface
 {
-
     /**
      * The database connection name.
      *
@@ -30,10 +30,8 @@ class MongoFailedJobProvider implements FailedJobProviderInterface
     /**
      * Create a new database failed job provider.
      *
-     * @param  \Illuminate\Database\ConnectionResolverInterface  $resolver
-     * @param  string  $database
-     * @param  string  $table
-     * @return void
+     * @param  string $database
+     * @param  string $table
      */
     public function __construct($database, $table)
     {
@@ -44,9 +42,10 @@ class MongoFailedJobProvider implements FailedJobProviderInterface
     /**
      * Log a failed job into storage.
      *
-     * @param  string  $connection
-     * @param  string  $queue
-     * @param  string  $payload
+     * @param  string $connection
+     * @param  string $queue
+     * @param  string $payload
+     *
      * @return void
      */
     public function log($connection, $queue, $payload)
@@ -64,7 +63,7 @@ class MongoFailedJobProvider implements FailedJobProviderInterface
     public function all()
     {
         $result = [];
-        $data = $this->getTable()->find([])->sort(['_id' => -1]);
+        $data = $this->getTable()->find([], ['sort' => ['_id' => -1]]);
 
         foreach ($data as $item) {
             $result[] = $item;
@@ -75,7 +74,8 @@ class MongoFailedJobProvider implements FailedJobProviderInterface
     /**
      * Get a single failed job.
      *
-     * @param  mixed  $id
+     * @param  mixed $id
+     *
      * @return array
      */
     public function find($id)
@@ -86,8 +86,9 @@ class MongoFailedJobProvider implements FailedJobProviderInterface
     /**
      * Delete a single failed job from storage.
      *
-     * @param  mixed  $id
-     * @return bool
+     * @param mixed $id
+     *
+     * @return bool|\MongoDB\DeleteResult
      */
     public function forget($id)
     {
@@ -96,22 +97,19 @@ class MongoFailedJobProvider implements FailedJobProviderInterface
 
     /**
      * Flush all of the failed jobs from storage.
-     *
-     * @return void
      */
     public function flush()
     {
-        $this->getTable()->deleteMany();
+        return $this->getTable()->deleteMany([]);
     }
 
     /**
      * Get a new query builder instance for the table.
      *
-     * @return \Illuminate\Database\Query\Builder
+     * @return Collection
      */
     protected function getTable()
     {
-        return $this->database->{$this->table};
+        return $this->database->selectCollection($this->table);
     }
-
 }

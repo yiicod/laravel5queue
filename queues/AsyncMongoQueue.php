@@ -1,10 +1,15 @@
 <?php
+
 namespace yiicod\laravel5queue\queues;
 
-use DateTime;
+use Illuminate\Queue\Jobs\Job;
 use Symfony\Component\Process\Process;
 use yiicod\laravel5queue\jobs\MongoJob;
 
+/**
+ * Class AsyncMongoQueue
+ * @package yiicod\laravel5queue\queues
+ */
 class AsyncMongoQueue extends MongoQueue
 {
     /** @var string */
@@ -13,14 +18,10 @@ class AsyncMongoQueue extends MongoQueue
     /** @var string */
     protected $binaryArgs;
 
-    /**
-     * @var int
-     */
+    /** @var int */
     protected $limit = 15;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $yiicAlias = 'application';
 
     /** @var string */
@@ -29,12 +30,15 @@ class AsyncMongoQueue extends MongoQueue
     /**
      * Create a new database queue instance.
      *
-     * @param  MongoDB connection $mongo
-     * @param  string $table
-     * @param  string $default
-     * @param  int $expire
-     * @param  string $binary
-     * @param  string|array $binaryArgs
+     * @param $mongo
+     * @param string $table
+     * @param string $default
+     * @param int $expire
+     * @param int $limit
+     * @param $yiicAlias
+     * @param string $binary
+     * @param string|array $binaryArgs
+     * @param string $connectionName
      */
     public function __construct($mongo, $table, $default = 'default', $expire = 60, $limit = 15, $yiicAlias, $binary = 'php', $binaryArgs = '', $connectionName = '')
     {
@@ -50,7 +54,8 @@ class AsyncMongoQueue extends MongoQueue
      * Pop the next job off of the queue.
      *
      * @param  string $queue
-     * @return Job|null
+     *
+     * @return Job|null|true
      */
     public function pop($queue = null)
     {
@@ -61,7 +66,6 @@ class AsyncMongoQueue extends MongoQueue
         }
 
         if ($job = $this->getNextAvailableJob($queue)) {
-
             $this->startProcess((string)$job->_id);
 
             return true;
@@ -70,20 +74,26 @@ class AsyncMongoQueue extends MongoQueue
         return null;
     }
 
+    /**
+     * Check if can run process
+     *
+     * @return bool
+     */
     protected function canRunProcess()
     {
-        return $this->database->{$this->table}->count(['reserved' => 1]) < $this->limit;
+        return count($this->getTable()->find(['reserved' => 1])) < $this->limit;
     }
 
     /**
      * Get the next available job for the queue.
      *
-     * @param  string|null $queue
-     * @return \StdClass|null
+     * @param $id
+     *
+     * @return null|\StdClass|MongoJob
      */
     public function getJobFromId($id)
     {
-        $job = $this->database->{$this->table}->findOne(['_id' => new \MongoDB\BSON\ObjectID($id)]);
+        $job = $this->getTable()->findOne(['_id' => new \MongoDB\BSON\ObjectID($id)]);
 
         return is_null($job) ? $job : new MongoJob($this->container, $this, $job, $job->queue);
     }
@@ -91,8 +101,7 @@ class AsyncMongoQueue extends MongoQueue
     /**
      * Make a Process for the Artisan command for the job id.
      *
-     * @param int $jobId
-     * @param int $delay
+     * @param $id
      *
      * @return void
      */
@@ -114,8 +123,7 @@ class AsyncMongoQueue extends MongoQueue
     /**
      * Get the Artisan command as a string for the job id.
      *
-     * @param int $jobId
-     * @param int $delay
+     * @param $id
      *
      * @return string
      */
@@ -149,11 +157,23 @@ class AsyncMongoQueue extends MongoQueue
         return trim($path . ' ' . $args);
     }
 
+    /**
+     * Get yiic path
+     *
+     * @return mixed
+     */
     protected function getYiicPath()
     {
         return \Yii::getPathOfAlias($this->yiicAlias);
     }
 
+    /**
+     * Get command
+     *
+     * @param $cmd
+     *
+     * @return string
+     */
     protected function getBackgroundCommand($cmd)
     {
         if (defined('PHP_WINDOWS_VERSION_BUILD')) {
@@ -162,6 +182,4 @@ class AsyncMongoQueue extends MongoQueue
             return $cmd . ' > /dev/null 2>&1 &';
         }
     }
-
-
 }
