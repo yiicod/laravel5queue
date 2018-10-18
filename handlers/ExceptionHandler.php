@@ -34,7 +34,7 @@ class ExceptionHandler implements \Illuminate\Contracts\Debug\ExceptionHandler
      */
     public function report(Exception $e)
     {
-        Yii::log($e->getMessage() . ' : ' . $e->getLine() . ' : ' . $e->getFile(), CLogger::LEVEL_ERROR, 'laravel5queue');
+        Yii::log("{$e->getMessage()} {$e->getLine()}:{$e->getFile()}\n{$e->getTraceAsString()}", CLogger::LEVEL_ERROR, 'laravel5queue');
     }
 
     /**

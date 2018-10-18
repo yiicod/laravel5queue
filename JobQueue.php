@@ -14,7 +14,7 @@ use yiicod\laravel5queue\connectors\MongoConnector;
  *
  * @author Virchenko Maksim <muslim1992@gmail.com>
  */
-class Laravel5Queue extends CApplicationComponent
+class JobQueue extends CApplicationComponent
 {
     /**
      * Available connections
@@ -90,7 +90,6 @@ class Laravel5Queue extends CApplicationComponent
         foreach ($this->connections as $name => $params) {
             $this->queueManager->addConnection($params, $name);
         }
-
         //Set as global to access
         $this->queueManager->setAsGlobal();
     }

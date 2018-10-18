@@ -97,6 +97,7 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
         $this->stopDaemon();
     }
 
+
     /**
      * Creates daemon.
      * Check is daemon already run and if false then starts daemon and update lock file.
@@ -205,5 +206,20 @@ class WorkerCommand extends CConsoleCommand implements WorkerInterface
 
         $worker = new Worker($manager->getQueueManager(), new MongoFailedJobProvider(Yii::app()->mongodb, 'YiiJobsFailed'), new ExceptionHandler());
         $worker->daemon($this->connection, $this->queue, $this->delay, $this->memory, $this->sleep, $this->maxTries);
+    }
+
+    /**
+     * Action to run Worker immediately, without starting daemon. Used for testing purposes
+     *
+     * @param string $connection
+     * @param string $queue
+     */
+    public function actionProcess(string $connection = 'default', string $queue = 'default')
+    {
+        /** @var Manager $queueManager */
+        $manager = Yii::app()->laravel5queue->getManager();
+
+        $worker = new Worker($manager->getQueueManager(), new MongoFailedJobProvider(Yii::app()->mongodb, 'YiiJobsFailed'), new ExceptionHandler());
+        $worker->daemon($connection, $queue, $this->delay, $this->memory, $this->sleep, $this->maxTries);
     }
 }
